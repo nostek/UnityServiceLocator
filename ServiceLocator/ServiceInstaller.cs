@@ -7,21 +7,27 @@ namespace UnityServiceLocator
 	{
 		readonly List<Type> services = new();
 
-		public ServiceInstaller RegisterSingleton<T>(out T service) where T : class, new()
-		{
-			service = ServiceLocator.RegisterSingleton<T>();
-			return this;
-		}
-
 		public ServiceInstaller RegisterSingleton<T>() where T : class, new()
 		{
 			ServiceLocator.RegisterSingleton<T>();
 			return this;
 		}
 
-		public ServiceInstaller RegisterSingleton<T>(T instance) where T : class
+		public ServiceInstaller RegisterSingleton<T>(out T service) where T : class, new()
 		{
-			ServiceLocator.RegisterSingleton(instance);
+			service = ServiceLocator.RegisterSingleton<T>();
+			return this;
+		}
+
+		public ServiceInstaller RegisterSingleton<T>(Func<T> onCreate) where T : class, new()
+		{
+			ServiceLocator.RegisterSingleton(typeof(T), onCreate);
+			return this;
+		}
+
+		public ServiceInstaller RegisterSingleton(Type type, Func<object> onCreate)
+		{
+			ServiceLocator.RegisterSingleton(type, onCreate);
 			return this;
 		}
 
@@ -29,6 +35,13 @@ namespace UnityServiceLocator
 		{
 			ServiceLocator.Register(service); //will throw exception here if there is a problem
 			services.Add(typeof(T));
+			return this;
+		}
+
+		public ServiceInstaller Register(Type type, object service)
+		{
+			ServiceLocator.Register(type, service); //will throw exception here if there is a problem
+			services.Add(type);
 			return this;
 		}
 

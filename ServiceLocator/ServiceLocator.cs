@@ -26,23 +26,18 @@ namespace UnityServiceLocator
 
 		public static T RegisterSingleton<T>() where T : class, new()
 		{
-			var service = TryGet<T>();
-			if (service != null)
-				return service;
-
-			service = new T();
-			Register(service);
-			return service;
+			return (T)RegisterSingleton(typeof(T), () => new T());
 		}
 
-		public static T RegisterSingleton<T>(T instance) where T : class
+		public static object RegisterSingleton(System.Type type, System.Func<object> onCreate)
 		{
-			var service = TryGet<T>();
+			var service = TryGet(type);
 			if (service != null)
 				return service;
 
-			Assert.IsNotNull(instance);
-			Register(instance);
+			Assert.IsNotNull(onCreate);
+			var instance = onCreate();
+			Register(type, instance);
 			return instance;
 		}
 
@@ -53,7 +48,7 @@ namespace UnityServiceLocator
 
 		public static void Register(System.Type type, object service)
 		{
-			Assert.IsNotNull(service, $"Provieded service is null for {type}");
+			Assert.IsNotNull(service, $"Provided service is null for {type}");
 			Assert.IsFalse(services.ContainsKey(type), $"Service is already registered for {type}");
 			services.Add(type, service);
 			Debug.Log($"Service {type} registered");
@@ -86,6 +81,13 @@ namespace UnityServiceLocator
 		{
 			if (services.TryGetValue(typeof(T), out var service))
 				return (T)service;
+			return default;
+		}
+
+		public static object TryGet(System.Type type)
+		{
+			if (services.TryGetValue(type, out var service))
+				return service;
 			return default;
 		}
 	}
