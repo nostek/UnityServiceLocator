@@ -122,7 +122,7 @@ namespace UnityServiceLocator
 
 			foreach (var monoBehaviour in monoBehaviours)
 				if (monoBehaviour != null)
-					serviceInstaller.Register(monoBehaviour);
+					serviceInstaller.Register(monoBehaviour.GetType(), monoBehaviour);
 
 			foreach (var scriptableObject in scriptableObjects)
 				if (scriptableObject != null)
