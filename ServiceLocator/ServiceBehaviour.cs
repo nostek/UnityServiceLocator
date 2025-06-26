@@ -7,6 +7,7 @@ using System.Linq;
 
 namespace UnityServiceLocator
 {
+	[DefaultExecutionOrder(-100)]
 	public class ServiceBehaviour : MonoBehaviour
 	{
 		[System.Serializable]
