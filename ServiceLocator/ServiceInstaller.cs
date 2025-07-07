@@ -19,15 +19,15 @@ namespace UnityServiceLocator
 			return this;
 		}
 
-		public ServiceInstaller RegisterSingleton<T>(Func<T> onCreate) where T : class, new()
+		public ServiceInstaller RegisterSingleton<T>(Func<T> factory) where T : class, new()
 		{
-			ServiceLocator.RegisterSingleton(typeof(T), onCreate);
+			ServiceLocator.RegisterSingleton(typeof(T), factory);
 			return this;
 		}
 
-		public ServiceInstaller RegisterSingleton(Type type, Func<object> onCreate)
+		public ServiceInstaller RegisterSingleton(Type type, Func<object> factory)
 		{
-			ServiceLocator.RegisterSingleton(type, onCreate);
+			ServiceLocator.RegisterSingleton(type, factory);
 			return this;
 		}
 

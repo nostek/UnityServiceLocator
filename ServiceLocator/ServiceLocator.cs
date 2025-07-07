@@ -26,17 +26,24 @@ namespace UnityServiceLocator
 
 		public static T RegisterSingleton<T>() where T : class, new()
 		{
-			return (T)RegisterSingleton(typeof(T), () => new T());
+			var type = typeof(T);
+			var service = TryGet(type);
+			if (service != null)
+				return service;
+
+			var instance = new T();
+			Register(type, instance);
+			return instance;
 		}
 
-		public static object RegisterSingleton(System.Type type, System.Func<object> onCreate)
+		public static object RegisterSingleton(System.Type type, System.Func<object> factory)
 		{
 			var service = TryGet(type);
 			if (service != null)
 				return service;
 
-			Assert.IsNotNull(onCreate);
-			var instance = onCreate();
+			Assert.IsNotNull(factory);
+			var instance = factory();
 			Register(type, instance);
 			return instance;
 		}
