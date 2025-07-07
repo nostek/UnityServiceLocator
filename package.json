@@ -3,5 +3,9 @@
   "description": "A ServiceLocator system",
   "version": "1.0.0",
   "unity": "6000.0",
-  "displayName": "UnityServiceLocator"
+  "displayName": "UnityServiceLocator",
+  "author": {
+    "name": "Simon Rodriguez",
+    "url": "https://github.com/nostek"
+  }
 }
