@@ -26,13 +26,12 @@ namespace UnityServiceLocator
 
 		public static T RegisterSingleton<T>() where T : class, new()
 		{
-			var type = typeof(T);
-			var service = TryGet(type);
+			var service = TryGet<T>();
 			if (service != null)
 				return service;
 
 			var instance = new T();
-			Register(type, instance);
+			Register(instance);
 			return instance;
 		}
 
