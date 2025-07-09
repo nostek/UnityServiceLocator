@@ -1,0 +1,18 @@
+{
+    "name": "ServiceLocator.Editor",
+    "rootNamespace": "UnityServiceLocator.Editor",
+    "references": [
+        "GUID:f0a9597457a1b4790b4d8b9146180ac1"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

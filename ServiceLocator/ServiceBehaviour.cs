@@ -1,10 +1,5 @@
 using UnityEngine;
 
-#if UNITY_EDITOR
-using UnityEditor;
-using System.Linq;
-#endif
-
 namespace UnityServiceLocator
 {
 	[DefaultExecutionOrder(-100)]
@@ -20,56 +15,6 @@ namespace UnityServiceLocator
 
 			public System.Type ClassType => System.Type.GetType(assemblyQualifiedName);
 		}
-
-#if UNITY_EDITOR
-		[CustomPropertyDrawer(typeof(ServiceClassType))]
-		public class PropertyEditorServiceClassType : PropertyDrawer
-		{
-			System.Type[] classes = null;
-			string[] strings = null;
-
-			public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
-			{
-				EditorGUI.BeginProperty(position, label, property);
-
-				if (classes == null)
-				{
-					var types = TypeCache.GetTypesDerivedFrom(typeof(object));
-
-					classes = types.Where(t => !t.IsAbstract && t.IsClass && !t.IsGenericType && t.IsPublic)
-						.OrderBy(t => t.Name)
-						.ToArray();
-
-					strings = classes
-						.Select(t => $"{t.Name[0]}/{t.Name}")
-						.ToArray();
-				}
-
-				var assemblyQualifiedName = property.FindPropertyRelative("assemblyQualifiedName");
-				var classType = !string.IsNullOrEmpty(assemblyQualifiedName.stringValue) ? System.Type.GetType(assemblyQualifiedName.stringValue) : null;
-				var index = classType != null ? System.Array.IndexOf(classes, classType) : -1;
-
-				var p1 = position;
-				p1.height = EditorGUIUtility.singleLineHeight;
-				var newIndex = EditorGUI.Popup(p1, "Class", index, strings);
-
-				if (newIndex != index)
-					assemblyQualifiedName.stringValue = classes[newIndex].AssemblyQualifiedName;
-
-				var p2 = position;
-				p2.y = EditorGUIUtility.singleLineHeight + 3f;
-				p2.height = EditorGUIUtility.singleLineHeight;
-				EditorGUI.PropertyField(p2, property.FindPropertyRelative("asSingleton"));
-
-				EditorGUI.EndProperty();
-			}
-
-			public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
-			{
-				return 3f + EditorGUIUtility.singleLineHeight * 2f;
-			}
-		}
-#endif
 
 		[Header("Settings")]
 		[SerializeField] bool installOnAwake = true;
