@@ -114,6 +114,8 @@ namespace UnityServiceLocator
 
 			serviceInstaller = new ServiceInstaller();
 
+			OnPreInstall(serviceInstaller);
+
 			foreach (var clazz in classes)
 				if (clazz != null && clazz.ClassType != null)
 					if (clazz.AsSingleton)
@@ -129,12 +131,17 @@ namespace UnityServiceLocator
 				if (scriptableObject != null)
 					serviceInstaller.Register(scriptableObject.GetType(), scriptableObject);
 
-			OnInstall(serviceInstaller);
+			OnInstalled(serviceInstaller);
 
 			serviceInstaller.Build();
 		}
 
-		virtual protected void OnInstall(ServiceInstaller installer)
+		virtual protected void OnPreInstall(ServiceInstaller installer)
+		{
+			//Override me
+		}
+
+		virtual protected void OnInstalled(ServiceInstaller installer)
 		{
 			//Override me
 		}
