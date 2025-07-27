@@ -15,7 +15,7 @@ namespace UnityServiceLocator
 			ServiceLocator.Register(to);
 			Assert.IsNotNull(ServiceLocator.TryGet<TestObject>());
 
-			Assert.AreEqual(ServiceLocator.TryGet<TestObject>(), to);
+			Assert.AreEqual(ServiceLocator.Get<TestObject>(), to);
 
 			ServiceLocator.Unregister(to);
 			Assert.IsNull(ServiceLocator.TryGet<TestObject>());
