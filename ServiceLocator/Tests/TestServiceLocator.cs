@@ -1,4 +1,6 @@
 using NUnit.Framework;
+using UnityEngine.TestTools.Constraints;
+using Is = UnityEngine.TestTools.Constraints.Is;
 
 namespace UnityServiceLocator
 {
@@ -16,6 +18,11 @@ namespace UnityServiceLocator
 			Assert.IsNotNull(ServiceLocator.TryGet<TestObject>());
 
 			Assert.AreEqual(ServiceLocator.Get<TestObject>(), to);
+
+			Assert.That(() =>
+			{
+				ServiceLocator.Get<TestObject>();
+			}, Is.Not.AllocatingGCMemory());
 
 			ServiceLocator.Unregister(to);
 			Assert.IsNull(ServiceLocator.TryGet<TestObject>());

@@ -79,7 +79,7 @@ namespace UnityServiceLocator
 
 		public static T Get<T>()
 		{
-			Assert.IsTrue(services.ContainsKey(typeof(T)), $"Service not registered for {typeof(T)}");
+			if (!services.ContainsKey(typeof(T))) Assert.IsTrue(false, $"Service not registered for {typeof(T)}");
 			return (T)services[typeof(T)];
 		}
 
