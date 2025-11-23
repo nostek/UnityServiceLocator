@@ -57,6 +57,7 @@ namespace UnityServiceLocator
 			Assert.IsFalse(services.ContainsKey(type), $"Service is already registered for {type}");
 			services.Add(type, service);
 			Debug.Log($"Service {type} registered");
+			OnChanged?.Invoke(type, service);
 		}
 
 		public static void Unregister<T>()
@@ -74,6 +75,7 @@ namespace UnityServiceLocator
 			Assert.IsTrue(services.ContainsKey(type), $"Service not registered for {type}");
 			services.Remove(type);
 			Debug.Log($"Service {type} unregistered");
+			OnChanged?.Invoke(type, null);
 		}
 
 		public static T Get<T>()
@@ -103,6 +105,14 @@ namespace UnityServiceLocator
 		public static ServiceLookup Get<T>(out T service) => lookup.Get(out service);
 
 		public static ServiceLookup TryGet<T>(out T service) => lookup.TryGet(out service);
+
+		#endregion
+
+		#region EVENT
+
+		public delegate void OnChangedDelegate(Type type, object service);
+
+		public static event OnChangedDelegate OnChanged;
 
 		#endregion
 	}
