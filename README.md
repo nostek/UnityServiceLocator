@@ -22,15 +22,16 @@ void OnMyEvent()
 }
 ```
 
-## ServiceLookup
+## Lookup Builder Pattern
 ```
 using UnityServiceLocator;
 
 void Awake()
 {
-	ServiceLocator.Lookup
+	ServiceLocator
 		.Get<MyGameManager>(out _myGameManagerInstance)
 		.Get<MySoundManager>(out _mySoundManagerInstance)
+		.TryGet<MyOptionalManager>(out _myOptionalManager)
 		.Done();
 }
 ```
