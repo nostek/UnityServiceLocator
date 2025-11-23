@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
@@ -35,7 +36,7 @@ namespace UnityServiceLocator
 			return instance;
 		}
 
-		public static object RegisterSingleton(System.Type type, System.Func<object> factory)
+		public static object RegisterSingleton(Type type, Func<object> factory)
 		{
 			var service = TryGet(type);
 			if (service != null)
@@ -52,7 +53,7 @@ namespace UnityServiceLocator
 			Register(typeof(T), service);
 		}
 
-		public static void Register(System.Type type, object service)
+		public static void Register(Type type, object service)
 		{
 			Assert.IsNotNull(service, $"Provided service is null for {type}");
 			Assert.IsFalse(services.ContainsKey(type), $"Service is already registered for {type}");
@@ -70,7 +71,7 @@ namespace UnityServiceLocator
 			Unregister(typeof(T));
 		}
 
-		public static void Unregister(System.Type type)
+		public static void Unregister(Type type)
 		{
 			Assert.IsTrue(services.ContainsKey(type), $"Service not registered for {type}");
 			services.Remove(type);
@@ -90,7 +91,7 @@ namespace UnityServiceLocator
 			return default;
 		}
 
-		public static object TryGet(System.Type type)
+		public static object TryGet(Type type)
 		{
 			if (services.TryGetValue(type, out var service))
 				return service;
