@@ -15,8 +15,6 @@ namespace UnityServiceLocator
 			services?.Clear();
 		}
 
-		public static ServiceLookup Lookup { get; } = new();
-
 		public static bool TryRegister<T>(T service) where T : class
 		{
 			if (service == null)
@@ -97,5 +95,15 @@ namespace UnityServiceLocator
 				return service;
 			return default;
 		}
+
+		#region LOOKUP
+
+		private readonly static ServiceLookup lookup = new();
+
+		public static ServiceLookup Get<T>(out T service) => lookup.Get(out service);
+
+		public static ServiceLookup TryGet<T>(out T service) => lookup.TryGet(out service);
+
+		#endregion
 	}
 }

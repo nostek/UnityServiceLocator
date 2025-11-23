@@ -92,7 +92,7 @@ namespace UnityServiceLocator
 			ServiceLocator.Register(to);
 			Assert.IsNotNull(ServiceLocator.TryGet<TestObject>());
 
-			ServiceLocator.Lookup
+			ServiceLocator
 				.Get(out TestObject outTo)
 				.Done();
 
