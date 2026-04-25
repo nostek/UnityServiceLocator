@@ -7,7 +7,7 @@ namespace UnityServiceLocator
 {
 	public static class ServiceLocator
 	{
-		static readonly Dictionary<object, object> services = new();
+		static readonly Dictionary<Type, object> services = new();
 
 		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
 		static void ClearStatics()
@@ -93,14 +93,12 @@ namespace UnityServiceLocator
 
 		public static object TryGet(Type type)
 		{
-			if (services.TryGetValue(type, out var service))
-				return service;
-			return default;
+			return services.GetValueOrDefault(type);
 		}
 
 		#region LOOKUP
 
-		private readonly static ServiceLookup lookup = new();
+		private static readonly ServiceLookup lookup = new();
 
 		public static ServiceLookup Get<T>(out T service) => lookup.Get(out service);
 
