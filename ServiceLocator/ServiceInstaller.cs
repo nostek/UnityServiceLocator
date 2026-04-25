@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityEngine.Assertions;
 
 namespace UnityServiceLocator
 {
@@ -49,6 +50,16 @@ namespace UnityServiceLocator
 		{
 			if (ServiceLocator.TryRegister(service))
 				services.Add(typeof(T));
+			return this;
+		}
+
+		public ServiceInstaller RegisterAs<T_Class, T_Interface>(T_Class service)
+			where T_Class : class
+			where T_Interface : class
+		{
+			Assert.IsTrue(typeof(T_Interface).IsAssignableFrom(typeof(T_Class)), "Class and Interface does not match");
+			Register(typeof(T_Class), service);
+			Register(typeof(T_Interface), service);
 			return this;
 		}
 
