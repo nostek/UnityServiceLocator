@@ -5,29 +5,38 @@ namespace UnityServiceLocator
 	[DefaultExecutionOrder(-100)]
 	public class ServiceBehaviour : MonoBehaviour
 	{
-		[System.Serializable]
-		public class ServiceClassType
+		public enum ServiceType
 		{
+			None = 0,
+			MonoBehaviour,
+			ScriptableObject,
+			Class
+		}
+
+		[System.Serializable]
+		public class ServiceComponent
+		{
+			[SerializeField] ServiceType serviceType = ServiceType.None;
+			public ServiceType ServiceType => serviceType;
+
+			[SerializeField] MonoBehaviour monoBehaviour = null;
+			public MonoBehaviour MonoBehaviour => monoBehaviour;
+
+			[SerializeField] ScriptableObject scriptableObject = null;
+			public ScriptableObject ScriptableObject => scriptableObject;
+
 			[SerializeField] string assemblyQualifiedName;
 			[SerializeField] bool asSingleton = false;
-
-			public bool AsSingleton => asSingleton;
-
 			public System.Type ClassType => System.Type.GetType(assemblyQualifiedName);
+			public bool AsSingleton => asSingleton;
 		}
 
 		[Header("Settings")]
 		[SerializeField] bool installOnAwake = true;
 		[SerializeField] bool installOnStart = false;
 
-		[Header("Classes")]
-		[SerializeField] ServiceClassType[] classes = null;
-
-		[Header("MonoBehaviours")]
-		[SerializeField] MonoBehaviour[] monoBehaviours = null;
-
-		[Header("ScriptableObjects")]
-		[SerializeField] ScriptableObject[] scriptableObjects = null;
+		[Header("Installation Order")]
+		[SerializeField] ServiceComponent[] services = null;
 
 		ServiceInstaller serviceInstaller = null;
 
@@ -61,32 +70,46 @@ namespace UnityServiceLocator
 
 			OnPreInstall(serviceInstaller);
 
-			foreach (var clazz in classes)
-				if (clazz != null && clazz.ClassType != null)
-					if (clazz.AsSingleton)
-						serviceInstaller.RegisterSingleton(clazz.ClassType, () => System.Activator.CreateInstance(clazz.ClassType));
-					else
-						serviceInstaller.Register(clazz.ClassType, System.Activator.CreateInstance(clazz.ClassType));
+			foreach (var service in services)
+			{
+				switch (service.ServiceType)
+				{
+					case ServiceType.Class:
+						if (service.ClassType != null)
+							if (service.AsSingleton)
+								serviceInstaller.RegisterSingleton(service.ClassType, () => System.Activator.CreateInstance(service.ClassType));
+							else
+								serviceInstaller.Register(service.ClassType, System.Activator.CreateInstance(service.ClassType));
+						break;
 
-			foreach (var monoBehaviour in monoBehaviours)
-				if (monoBehaviour != null)
-					serviceInstaller.Register(monoBehaviour.GetType(), monoBehaviour);
+					case ServiceType.MonoBehaviour:
+						if (service.MonoBehaviour != null)
+							serviceInstaller.Register(service.MonoBehaviour.GetType(), service.MonoBehaviour);
+						break;
 
-			foreach (var scriptableObject in scriptableObjects)
-				if (scriptableObject != null)
-					serviceInstaller.Register(scriptableObject.GetType(), scriptableObject);
+					case ServiceType.ScriptableObject:
+						if (service.ScriptableObject != null)
+							serviceInstaller.Register(service.ScriptableObject.GetType(), service.ScriptableObject);
+						break;
+
+					case ServiceType.None:
+						break;
+					default:
+						throw new System.ArgumentOutOfRangeException();
+				}
+			}
 
 			OnInstalled(serviceInstaller);
 
 			serviceInstaller.Build();
 		}
 
-		virtual protected void OnPreInstall(ServiceInstaller installer)
+		protected virtual void OnPreInstall(ServiceInstaller installer)
 		{
 			//Override me
 		}
 
-		virtual protected void OnInstalled(ServiceInstaller installer)
+		protected virtual void OnInstalled(ServiceInstaller installer)
 		{
 			//Override me
 		}
