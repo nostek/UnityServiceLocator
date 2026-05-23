@@ -40,25 +40,22 @@ namespace UnityServiceLocator
 
 		ServiceInstaller serviceInstaller = null;
 
-		void Awake()
+		protected void Awake()
 		{
 			if (installOnAwake)
 				Install();
 		}
 
-		void Start()
+		protected void Start()
 		{
 			if (installOnStart)
 				Install();
 		}
 
-		void OnDestroy()
+		protected void OnDestroy()
 		{
-			if (serviceInstaller != null)
-			{
-				serviceInstaller.Dispose();
-				serviceInstaller = null;
-			}
+			serviceInstaller?.Dispose();
+			serviceInstaller = null;
 		}
 
 		public void Install()
