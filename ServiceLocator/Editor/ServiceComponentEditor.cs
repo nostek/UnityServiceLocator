@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace UnityServiceLocator.Editor
 {
-	[CustomPropertyDrawer(typeof(ServiceBehaviour.ServiceComponent))]
+	[CustomPropertyDrawer(typeof(InstallServicesBehaviour.ServiceComponent))]
 	public class PropertyEditorServiceComponent : PropertyDrawer
 	{
 		static System.Type[] classes = null;
@@ -28,19 +28,19 @@ namespace UnityServiceLocator.Editor
 				position.width -= 135 + 3;
 			}
 
-			if (serviceType.intValue == (int)ServiceBehaviour.ServiceType.MonoBehaviour)
+			if (serviceType.intValue == (int)InstallServicesBehaviour.ServiceType.MonoBehaviour)
 			{
 				var field = property.FindPropertyRelative("monoBehaviour");
 				EditorGUI.PropertyField(position, field, GUIContent.none);
 			}
 
-			if (serviceType.intValue == (int)ServiceBehaviour.ServiceType.ScriptableObject)
+			if (serviceType.intValue == (int)InstallServicesBehaviour.ServiceType.ScriptableObject)
 			{
 				var field = property.FindPropertyRelative("scriptableObject");
 				EditorGUI.PropertyField(position, field, GUIContent.none);
 			}
 
-			if (serviceType.intValue == (int)ServiceBehaviour.ServiceType.Class)
+			if (serviceType.intValue == (int)InstallServicesBehaviour.ServiceType.Class)
 			{
 				//Toggle Singleton
 				{

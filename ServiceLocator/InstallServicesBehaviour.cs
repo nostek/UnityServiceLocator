@@ -3,7 +3,7 @@ using UnityEngine;
 namespace UnityServiceLocator
 {
 	[DefaultExecutionOrder(-100)]
-	public class ServiceBehaviour : MonoBehaviour
+	public class InstallServicesBehaviour : MonoBehaviour
 	{
 		public enum ServiceType
 		{
@@ -99,6 +99,39 @@ namespace UnityServiceLocator
 			OnInstalled(serviceInstaller);
 
 			serviceInstaller.Build();
+
+			foreach (var service in services)
+			{
+				switch (service.ServiceType)
+				{
+					case ServiceType.Class:
+						if (service.ClassType != null)
+							Notify(service.ClassType);
+						break;
+
+					case ServiceType.MonoBehaviour:
+						if (service.MonoBehaviour != null)
+							Notify(service.MonoBehaviour.GetType());
+						break;
+
+					case ServiceType.ScriptableObject:
+						if (service.ScriptableObject != null)
+							Notify(service.ScriptableObject.GetType());
+						break;
+
+					case ServiceType.None:
+						break;
+					default:
+						throw new System.ArgumentOutOfRangeException();
+				}
+			}
+		}
+
+		void Notify(System.Type type)
+		{
+			object @object = ServiceLocator.TryGet(type);
+			if (@object != null && @object is IServiceInstalled @interface)
+				@interface.OnServiceInstalled();
 		}
 
 		protected virtual void OnPreInstall(ServiceInstaller installer)
