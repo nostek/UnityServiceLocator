@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using UnityEngine;
 using UnityEngine.Assertions;
 
@@ -111,6 +112,26 @@ namespace UnityServiceLocator
 		public delegate void OnChangedDelegate(Type type, object service);
 
 		public static event OnChangedDelegate OnChanged;
+
+		#endregion
+
+		#region AWAITABLE
+
+		public static async Awaitable<T> WaitForAsync<T>(CancellationToken cancellationToken)
+		{
+			while (!cancellationToken.IsCancellationRequested)
+			{
+				var service = TryGet<T>();
+				if (service != null)
+					return service;
+
+				await Awaitable.NextFrameAsync();
+			}
+
+			cancellationToken.ThrowIfCancellationRequested();
+
+			return default;
+		}
 
 		#endregion
 	}
