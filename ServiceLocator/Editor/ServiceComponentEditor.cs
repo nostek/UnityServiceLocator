@@ -2,20 +2,29 @@ using UnityEngine;
 using UnityEditor;
 using System.Linq;
 using System.Collections.Generic;
+using UnityEditor.IMGUI.Controls;
 
 namespace UnityServiceLocator.Editor
 {
 	[CustomPropertyDrawer(typeof(InstallServicesBehaviour.ServiceComponent))]
 	public class PropertyEditorServiceComponent : PropertyDrawer
 	{
-		static System.Type[] classes = null;
+		SelectClassDropDown dropdown = null;
 
-		readonly Dictionary<string, string> editing = new();
+		(SerializedProperty dirtyProperty, System.Type dirtyType)? dirty = null;
 
 		public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
 		{
 			EditorGUI.BeginProperty(position, label, property);
 			var prevLabelWidth = EditorGUIUtility.labelWidth;
+
+			if (dirty.HasValue && dirty.Value.dirtyProperty.propertyPath == property.propertyPath)
+			{
+				var assemblyQualifiedName = property.FindPropertyRelative("assemblyQualifiedName");
+				assemblyQualifiedName.stringValue = dirty.Value.dirtyType.AssemblyQualifiedName ?? string.Empty;
+
+				dirty = null;
+			}
 
 			var serviceType = property.FindPropertyRelative("serviceType");
 			{
@@ -57,57 +66,25 @@ namespace UnityServiceLocator.Editor
 				var assemblyQualifiedName = property.FindPropertyRelative("assemblyQualifiedName");
 				var classType = !string.IsNullOrEmpty(assemblyQualifiedName.stringValue) ? System.Type.GetType(assemblyQualifiedName.stringValue) : null;
 
-				if (editing.ContainsKey(property.propertyPath))
+				//Label Selected class
 				{
-					var editText = editing[property.propertyPath];
+					var pos = position;
+					pos.width -= 60 + 3;
 
-					//Textfield Selected class
-					{
-						var pos = position;
-						pos.width -= 60 + 3;
+					EditorGUI.LabelField(pos, classType != null ? $"{classType.Name} ({classType.Assembly.FullName[..classType.Assembly.FullName.IndexOf(',')]})" : "(None)");
 
-						editing[property.propertyPath] = EditorGUI.TextField(pos, editText);
-
-						position.x += pos.width + 3;
-						position.width -= 3;
-					}
-
-					//Button OK
-					{
-						var pos = position;
-						pos.width = 60;
-
-						if (GUI.Button(pos, "OK"))
-						{
-							editing.Remove(property.propertyPath);
-
-							BuildClasses();
-
-							var found = !string.IsNullOrEmpty(editText) ? classes.FirstOrDefault(t => t.FullName.Contains(editText)) : null;
-							assemblyQualifiedName.stringValue = found?.AssemblyQualifiedName ?? string.Empty;
-						}
-					}
+					position.x += pos.width + 3;
+					position.width -= 3;
 				}
-				else
+
+				//Button Select
 				{
-					//Label Selected class
+					var pos = position;
+					pos.width = 60;
+
+					if (GUI.Button(pos, "Select"))
 					{
-						var pos = position;
-						pos.width -= 60 + 3;
-
-						EditorGUI.LabelField(pos, classType != null ? $"{classType.Name} ({classType.Assembly.FullName[..classType.Assembly.FullName.IndexOf(',')]})" : "(None)");
-
-						position.x += pos.width + 3;
-						position.width -= 3;
-					}
-
-					//Button Select
-					{
-						var pos = position;
-						pos.width = 60;
-
-						if (GUI.Button(pos, "Select"))
-							editing[property.propertyPath] = classType?.FullName ?? string.Empty;
+						ShowAdvancedDropDown(property.Copy());
 					}
 				}
 			}
@@ -116,21 +93,93 @@ namespace UnityServiceLocator.Editor
 			EditorGUI.EndProperty();
 		}
 
-		static void BuildClasses()
+		void ShowAdvancedDropDown(SerializedProperty property)
 		{
-			if (classes != null)
-				return;
-
-			var types = TypeCache.GetTypesDerivedFrom(typeof(object));
-
-			classes = types.Where(t => !t.IsAbstract && t.IsClass && !t.IsGenericType && t.IsPublic)
-				.OrderBy(t => t.Name)
-				.ToArray();
+			dropdown ??= new SelectClassDropDown(new AdvancedDropdownState());
+			dropdown.ListenTo((selectedType) =>
+			{
+				dirty = (property, selectedType);
+			});
+			dropdown.Show(GUILayoutUtility.GetLastRect());
 		}
 
 		public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
 		{
 			return EditorGUIUtility.singleLineHeight;
+		}
+
+		class SelectClassDropDown : AdvancedDropdown
+		{
+			System.Type[] classes;
+
+			private event System.Action<System.Type> OnSelected;
+
+			public SelectClassDropDown(AdvancedDropdownState state) : base(state)
+			{
+			}
+
+			public void ListenTo(System.Action<System.Type> callback)
+			{
+				OnSelected = null;
+				OnSelected += callback;
+			}
+
+			void BuildClasses()
+			{
+				if (classes != null)
+					return;
+
+				var types = TypeCache.GetTypesDerivedFrom(typeof(object));
+
+				classes = types.Where(t => !t.IsAbstract && t.IsClass && !t.IsGenericType && t.IsPublic)
+					.OrderBy(t => t.FullName)
+					.ToArray();
+			}
+
+			protected override AdvancedDropdownItem BuildRoot()
+			{
+				BuildClasses();
+
+				var category = new string[classes.Length];
+				for (int i = 0; i < classes.Length; i++)
+					category[i] = string.IsNullOrEmpty(classes[i].Namespace) ? null : classes[i].Namespace.Split('.')[0];
+
+				var root = new AdvancedDropdownItem("Classes");
+
+				var roots = new Dictionary<string, AdvancedDropdownItem>();
+
+				for (int i = 0; i < classes.Length; i++)
+				{
+					if (string.IsNullOrEmpty(category[i]))
+						continue;
+					if (roots.ContainsKey(category[i]))
+						continue;
+
+					var item = new AdvancedDropdownItem(category[i]);
+					root.AddChild(item);
+					roots.Add(category[i], item);
+				}
+
+				root.AddSeparator();
+
+				for (int i = 0; i < classes.Length; i++)
+				{
+					var iCopy = i;
+					var parent = string.IsNullOrEmpty(category[i]) ? root : roots[category[i]];
+					var item = new AdvancedDropdownItem(classes[i].FullName);
+					parent.AddChild(item);
+					item.id = iCopy;
+				}
+
+				return root;
+			}
+
+			protected override void ItemSelected(AdvancedDropdownItem item)
+			{
+				var ev = OnSelected;
+				OnSelected = null;
+				ev?.Invoke(classes[item.id]);
+			}
 		}
 	}
 }
