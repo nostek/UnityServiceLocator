@@ -11,20 +11,37 @@ namespace UnityServiceLocator.Editor
 	{
 		SelectClassDropDown dropdown = null;
 
-		(SerializedProperty dirtyProperty, System.Type dirtyType)? dirty = null;
+		struct DirtyType
+		{
+			public SerializedProperty Property;
+			public System.Type Type;
+		}
+
+		DirtyType? dirty = null;
+		DirtyType? dirtyInterface = null;
 
 		public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
 		{
 			EditorGUI.BeginProperty(position, label, property);
 			var prevLabelWidth = EditorGUIUtility.labelWidth;
 
-			if (dirty.HasValue && dirty.Value.dirtyProperty.propertyPath == property.propertyPath)
+			if (dirty.HasValue && dirty.Value.Property.propertyPath == property.propertyPath)
 			{
 				var assemblyQualifiedName = property.FindPropertyRelative("assemblyQualifiedName");
-				assemblyQualifiedName.stringValue = dirty.Value.dirtyType.AssemblyQualifiedName ?? string.Empty;
+				assemblyQualifiedName.stringValue = dirty.Value.Type.AssemblyQualifiedName ?? string.Empty;
 
 				dirty = null;
 			}
+
+			if (dirtyInterface.HasValue && dirtyInterface.Value.Property.propertyPath == property.propertyPath)
+			{
+				var assemblyQualifiedNameForInterface = property.FindPropertyRelative("assemblyQualifiedNameForInterface");
+				assemblyQualifiedNameForInterface.stringValue = dirtyInterface.Value.Type.AssemblyQualifiedName ?? string.Empty;
+
+				dirtyInterface = null;
+			}
+
+			System.Type interfacesForType = null;
 
 			var serviceType = property.FindPropertyRelative("serviceType");
 			{
@@ -39,52 +56,101 @@ namespace UnityServiceLocator.Editor
 
 			if (serviceType.intValue == (int)InstallServicesBehaviour.ServiceType.MonoBehaviour)
 			{
+				var pos = position;
+				pos.width = pos.width / 2 - 2;
+
 				var field = property.FindPropertyRelative("monoBehaviour");
-				EditorGUI.PropertyField(position, field, GUIContent.none);
+				EditorGUI.PropertyField(pos, field, GUIContent.none);
+
+				interfacesForType = field.objectReferenceValue != null ? field.objectReferenceValue.GetType() : null;
+
+				position.x += pos.width + 2;
+				position.width -= pos.width + 2;
 			}
 
 			if (serviceType.intValue == (int)InstallServicesBehaviour.ServiceType.ScriptableObject)
 			{
+				var pos = position;
+				pos.width = pos.width / 2 - 2;
+
 				var field = property.FindPropertyRelative("scriptableObject");
-				EditorGUI.PropertyField(position, field, GUIContent.none);
+				EditorGUI.PropertyField(pos, field, GUIContent.none);
+
+				interfacesForType = field.objectReferenceValue != null ? field.objectReferenceValue.GetType() : null;
+
+				position.x += pos.width + 2;
+				position.width -= pos.width + 2;
 			}
 
-			if (serviceType.intValue == (int)InstallServicesBehaviour.ServiceType.Class)
+			if (serviceType.intValue == (int)InstallServicesBehaviour.ServiceType.Class || serviceType.intValue == (int)InstallServicesBehaviour.ServiceType.SingletonClass)
 			{
-				//Toggle Singleton
-				{
-					var pos = position;
-					pos.width = 110;
-					EditorGUIUtility.labelWidth = 60;
-					EditorGUI.PropertyField(pos, property.FindPropertyRelative("asSingleton"), new GUIContent("Singleton"));
-					EditorGUIUtility.labelWidth = prevLabelWidth;
-
-					position.x += 110 + 3;
-					position.width -= 110 + 3;
-				}
+				var pos = position;
+				pos.width = pos.width / 2 - 2;
 
 				var assemblyQualifiedName = property.FindPropertyRelative("assemblyQualifiedName");
 				var classType = !string.IsNullOrEmpty(assemblyQualifiedName.stringValue) ? System.Type.GetType(assemblyQualifiedName.stringValue) : null;
 
-				//Label Selected class
+				interfacesForType = classType;
+
+				//Label
 				{
-					var pos = position;
-					pos.width -= 60 + 3;
+					var posi = pos;
+					posi.width -= 19;
 
-					EditorGUI.LabelField(pos, classType != null ? $"{classType.Name} ({classType.Assembly.FullName[..classType.Assembly.FullName.IndexOf(',')]})" : "(None)");
+					EditorGUI.LabelField(posi, classType != null ? $"{classType.Name} ({classType.Assembly.FullName[..classType.Assembly.FullName.IndexOf(',')]})" : "None (Class)", EditorStyles.objectField);
 
-					position.x += pos.width + 3;
-					position.width -= 3;
+					pos.x += posi.width;
 				}
 
 				//Button Select
 				{
-					var pos = position;
-					pos.width = 60;
+					var posi = pos;
+					posi.width = 19;
 
-					if (GUI.Button(pos, "Select"))
+					if (GUI.Button(posi, EditorGUIUtility.IconContent("d_pick"), EditorStyles.objectFieldThumb))
 					{
 						ShowAdvancedDropDown(property.Copy());
+					}
+				}
+
+				position.x += pos.width + 2;
+				position.width -= pos.width + 2;
+			}
+
+			//Interface picker
+			{
+				var assemblyQualifiedNameForInterface = property.FindPropertyRelative("assemblyQualifiedNameForInterface");
+				var interfaceType = !string.IsNullOrEmpty(assemblyQualifiedNameForInterface.stringValue) ? System.Type.GetType(assemblyQualifiedNameForInterface.stringValue) : null;
+
+				var interfaces = interfacesForType?.GetInterfaces();
+				if ((interfaces == null || interfaces.Length == 0) && !string.IsNullOrEmpty(assemblyQualifiedNameForInterface.stringValue))
+				{
+					assemblyQualifiedNameForInterface.stringValue = string.Empty;
+					interfaceType = null;
+				}
+
+				//Label
+				{
+					var pos = position;
+					pos.width -= 19;
+
+					EditorGUI.LabelField(pos, interfaceType != null ? $"{interfaceType.Name} ({interfaceType.Assembly.FullName[..interfaceType.Assembly.FullName.IndexOf(',')]})" : "None (Interface)", EditorStyles.objectField);
+
+					position.x += pos.width;
+				}
+
+				//Button Select
+				if (interfaces != null && interfaces.Length > 0)
+				{
+					var pos = position;
+					pos.width = 19;
+
+					if (GUI.Button(pos, EditorGUIUtility.IconContent("d_pick"), EditorStyles.objectFieldThumb))
+					{
+						GenericMenu menu = new();
+						foreach (var i in interfaces)
+							menu.AddItem(new GUIContent(i.Name), false, (t) => { dirtyInterface = (DirtyType)t; }, new DirtyType() { Property = property.Copy(), Type = i });
+						menu.ShowAsContext();
 					}
 				}
 			}
@@ -98,7 +164,7 @@ namespace UnityServiceLocator.Editor
 			dropdown ??= new SelectClassDropDown(new AdvancedDropdownState());
 			dropdown.ListenTo((selectedType) =>
 			{
-				dirty = (property, selectedType);
+				dirty = new DirtyType { Property = property, Type = selectedType };
 			});
 			dropdown.Show(GUILayoutUtility.GetLastRect());
 		}

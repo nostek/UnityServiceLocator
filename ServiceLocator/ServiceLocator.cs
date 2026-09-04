@@ -47,6 +47,19 @@ namespace UnityServiceLocator
 			return instance;
 		}
 
+		public static object RegisterSingletonAs(Type objectType, Type interfaceType, Func<object> factory)
+		{
+			var service = TryGet(objectType);
+			if (service != null)
+				return service;
+
+			Assert.IsNotNull(factory);
+			var instance = factory();
+			Register(objectType, instance);
+			Register(interfaceType, instance);
+			return instance;
+		}
+
 		public static void Register<T>(T service) where T : class
 		{
 			Register(typeof(T), service);

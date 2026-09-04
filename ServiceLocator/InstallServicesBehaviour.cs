@@ -10,7 +10,8 @@ namespace UnityServiceLocator
 			None = 0,
 			MonoBehaviour,
 			ScriptableObject,
-			Class
+			Class,
+			SingletonClass
 		}
 
 		[System.Serializable]
@@ -26,9 +27,12 @@ namespace UnityServiceLocator
 			public ScriptableObject ScriptableObject => scriptableObject;
 
 			[SerializeField] string assemblyQualifiedName;
-			[SerializeField] bool asSingleton = false;
 			public System.Type ClassType => System.Type.GetType(assemblyQualifiedName);
-			public bool AsSingleton => asSingleton;
+
+			[SerializeField] string assemblyQualifiedNameForInterface;
+			public System.Type InterfaceType => System.Type.GetType(assemblyQualifiedNameForInterface);
+
+			[System.NonSerialized] public bool RegisteredSingleton = false;
 		}
 
 		[Header("Settings")]
@@ -73,20 +77,42 @@ namespace UnityServiceLocator
 				{
 					case ServiceType.Class:
 						if (service.ClassType != null)
-							if (service.AsSingleton)
-								serviceInstaller.RegisterSingleton(service.ClassType, () => System.Activator.CreateInstance(service.ClassType));
+							if (service.InterfaceType != null)
+								serviceInstaller.RegisterAs(service.ClassType, service.InterfaceType, System.Activator.CreateInstance(service.ClassType));
 							else
 								serviceInstaller.Register(service.ClassType, System.Activator.CreateInstance(service.ClassType));
 						break;
 
+					case ServiceType.SingletonClass:
+						if (service.ClassType != null)
+							if (service.InterfaceType != null)
+								serviceInstaller.RegisterSingletonAs(service.ClassType, service.InterfaceType, () =>
+								{
+									service.RegisteredSingleton = true;
+									return System.Activator.CreateInstance(service.ClassType);
+								});
+							else
+								serviceInstaller.RegisterSingleton(service.ClassType, () =>
+								{
+									service.RegisteredSingleton = true;
+									return System.Activator.CreateInstance(service.ClassType);
+								});
+						break;
+
 					case ServiceType.MonoBehaviour:
 						if (service.MonoBehaviour != null)
-							serviceInstaller.Register(service.MonoBehaviour.GetType(), service.MonoBehaviour);
+							if (service.InterfaceType != null)
+								serviceInstaller.RegisterAs(service.MonoBehaviour.GetType(), service.InterfaceType, service.MonoBehaviour);
+							else
+								serviceInstaller.Register(service.MonoBehaviour.GetType(), service.MonoBehaviour);
 						break;
 
 					case ServiceType.ScriptableObject:
 						if (service.ScriptableObject != null)
-							serviceInstaller.Register(service.ScriptableObject.GetType(), service.ScriptableObject);
+							if (service.InterfaceType != null)
+								serviceInstaller.RegisterAs(service.ScriptableObject.GetType(), service.InterfaceType, service.ScriptableObject);
+							else
+								serviceInstaller.Register(service.ScriptableObject.GetType(), service.ScriptableObject);
 						break;
 
 					case ServiceType.None:
@@ -106,6 +132,11 @@ namespace UnityServiceLocator
 				{
 					case ServiceType.Class:
 						if (service.ClassType != null)
+							Notify(service.ClassType);
+						break;
+
+					case ServiceType.SingletonClass:
+						if (service.ClassType != null && service.RegisteredSingleton)
 							Notify(service.ClassType);
 						break;
 
