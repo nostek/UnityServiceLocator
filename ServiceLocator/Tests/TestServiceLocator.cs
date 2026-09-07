@@ -11,11 +11,11 @@ namespace UnityServiceLocator
 		{
 			var to = new TestObject();
 
-			Assert.IsNull(ServiceLocator.TryGet<TestObject>());
+			Assert.IsNull(ServiceLocator.GetOrDefault<TestObject>());
 			Assert.Throws<UnityEngine.Assertions.AssertionException>(() => ServiceLocator.Get<TestObject>());
 
 			ServiceLocator.Register(to);
-			Assert.IsNotNull(ServiceLocator.TryGet<TestObject>());
+			Assert.IsNotNull(ServiceLocator.GetOrDefault<TestObject>());
 
 			Assert.AreEqual(ServiceLocator.Get<TestObject>(), to);
 
@@ -25,39 +25,39 @@ namespace UnityServiceLocator
 			}, Is.Not.AllocatingGCMemory());
 
 			ServiceLocator.Unregister(to);
-			Assert.IsNull(ServiceLocator.TryGet<TestObject>());
+			Assert.IsNull(ServiceLocator.GetOrDefault<TestObject>());
 
 			//
 
 			TestObject toUndefined = null;
 
 			Assert.Throws<UnityEngine.Assertions.AssertionException>(() => ServiceLocator.Register<TestObject>(toUndefined));
-			Assert.IsNull(ServiceLocator.TryGet<TestObject>());
+			Assert.IsNull(ServiceLocator.GetOrDefault<TestObject>());
 
 			Assert.DoesNotThrow(() => ServiceLocator.TryRegister<TestObject>(toUndefined));
-			Assert.IsNull(ServiceLocator.TryGet<TestObject>());
+			Assert.IsNull(ServiceLocator.GetOrDefault<TestObject>());
 
 			//
 
-			Assert.IsNull(ServiceLocator.TryGet<TestObject>());
+			Assert.IsNull(ServiceLocator.GetOrDefault<TestObject>());
 
 			var singleton = ServiceLocator.RegisterSingleton<TestObject>();
 			Assert.IsNotNull(singleton);
 
-			var singleton1 = ServiceLocator.TryGet<TestObject>();
+			var singleton1 = ServiceLocator.GetOrDefault<TestObject>();
 			Assert.IsNotNull(singleton1);
 
 			Assert.AreEqual(singleton, singleton1);
 
 			Assert.DoesNotThrow(() => ServiceLocator.RegisterSingleton<TestObject>());
 
-			var singleton2 = ServiceLocator.TryGet<TestObject>();
+			var singleton2 = ServiceLocator.GetOrDefault<TestObject>();
 			Assert.IsNotNull(singleton2);
 
 			Assert.AreEqual(singleton1, singleton2);
 
 			ServiceLocator.Unregister<TestObject>();
-			Assert.IsNull(ServiceLocator.TryGet<TestObject>());
+			Assert.IsNull(ServiceLocator.GetOrDefault<TestObject>());
 		}
 
 		[Test]
@@ -66,20 +66,20 @@ namespace UnityServiceLocator
 			var to = new TestObject();
 			TestObject toUndefined = null;
 
-			Assert.IsNull(ServiceLocator.TryGet<TestObject>());
+			Assert.IsNull(ServiceLocator.GetOrDefault<TestObject>());
 
 			var installer = new ServiceInstaller();
 
 			Assert.DoesNotThrow(() => installer.TryRegister(toUndefined));
-			Assert.IsNull(ServiceLocator.TryGet<TestObject>());
+			Assert.IsNull(ServiceLocator.GetOrDefault<TestObject>());
 
 			Assert.DoesNotThrow(() => installer.Register(to));
-			Assert.IsNotNull(ServiceLocator.TryGet<TestObject>());
+			Assert.IsNotNull(ServiceLocator.GetOrDefault<TestObject>());
 
-			Assert.AreEqual(ServiceLocator.TryGet<TestObject>(), to);
+			Assert.AreEqual(ServiceLocator.GetOrDefault<TestObject>(), to);
 
 			installer.Dispose();
-			Assert.IsNull(ServiceLocator.TryGet<TestObject>());
+			Assert.IsNull(ServiceLocator.GetOrDefault<TestObject>());
 		}
 
 		[Test]
@@ -87,10 +87,10 @@ namespace UnityServiceLocator
 		{
 			var to = new TestObject();
 
-			Assert.IsNull(ServiceLocator.TryGet<TestObject>());
+			Assert.IsNull(ServiceLocator.GetOrDefault<TestObject>());
 
 			ServiceLocator.Register(to);
-			Assert.IsNotNull(ServiceLocator.TryGet<TestObject>());
+			Assert.IsNotNull(ServiceLocator.GetOrDefault<TestObject>());
 
 			ServiceLocator
 				.Get(out TestObject outTo)
@@ -101,7 +101,7 @@ namespace UnityServiceLocator
 			Assert.AreEqual(to, outTo);
 
 			ServiceLocator.Unregister(to);
-			Assert.IsNull(ServiceLocator.TryGet<TestObject>());
+			Assert.IsNull(ServiceLocator.GetOrDefault<TestObject>());
 		}
 
 		class TestObject

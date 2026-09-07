@@ -6,7 +6,7 @@ using UnityEngine.Assertions;
 
 namespace UnityServiceLocator
 {
-	public static class ServiceLocator
+	public static partial class ServiceLocator
 	{
 		static readonly Dictionary<Type, object> services = new();
 
@@ -26,8 +26,7 @@ namespace UnityServiceLocator
 
 		public static T RegisterSingleton<T>() where T : class, new()
 		{
-			var service = TryGet<T>();
-			if (service != null)
+			if (TryGet(out T service))
 				return service;
 
 			var instance = new T();
@@ -37,8 +36,7 @@ namespace UnityServiceLocator
 
 		public static object RegisterSingleton(Type type, Func<object> factory)
 		{
-			var service = TryGet(type);
-			if (service != null)
+			if (TryGet(out object service))
 				return service;
 
 			Assert.IsNotNull(factory);
@@ -49,8 +47,7 @@ namespace UnityServiceLocator
 
 		public static object RegisterSingletonAs(Type objectType, Type interfaceType, Func<object> factory)
 		{
-			var service = TryGet(objectType);
-			if (service != null)
+			if (TryGet(out object service))
 				return service;
 
 			Assert.IsNotNull(factory);
@@ -98,25 +95,41 @@ namespace UnityServiceLocator
 			return (T)services[typeof(T)];
 		}
 
-		public static T TryGet<T>()
+		public static T GetOrDefault<T>()
 		{
 			if (services.TryGetValue(typeof(T), out var service))
 				return (T)service;
 			return default;
 		}
 
-		public static object TryGet(Type type)
+		public static object GetOrDefault(Type type)
 		{
 			return services.GetValueOrDefault(type);
 		}
 
+		public static bool TryGet<T>(out T service)
+		{
+			if (services.TryGetValue(typeof(T), out var registered))
+			{
+				service = (T)registered;
+				return true;
+			}
+			service = default;
+			return false;
+		}
+
+		public static bool TryGet(Type type, out object service)
+		{
+			return services.TryGetValue(type, out service);
+		}
+
 		#region LOOKUP
 
-		private static readonly ServiceLookup lookup = new();
+		private static readonly Lookup lookup = new();
 
-		public static ServiceLookup Get<T>(out T service) => lookup.Get(out service);
+		public static Lookup Get<T>(out T service) => lookup.Get(out service);
 
-		public static ServiceLookup TryGet<T>(out T service) => lookup.TryGet(out service);
+		public static Lookup GetOrDefault<T>(out T service) => lookup.GetOrDefault(out service);
 
 		#endregion
 
@@ -134,8 +147,7 @@ namespace UnityServiceLocator
 		{
 			while (!cancellationToken.IsCancellationRequested)
 			{
-				var service = TryGet<T>();
-				if (service != null)
+				if (TryGet(out T service))
 					return service;
 
 				await Awaitable.NextFrameAsync();

@@ -160,8 +160,7 @@ namespace UnityServiceLocator
 
 		void Notify(System.Type type)
 		{
-			object @object = ServiceLocator.TryGet(type);
-			if (@object != null && @object is IServiceInstalled @interface)
+			if (ServiceLocator.TryGet(type, out object @object) && @object is IServiceInstalled @interface)
 				@interface.OnServiceInstalled();
 		}
 
