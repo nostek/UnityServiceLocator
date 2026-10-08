@@ -37,7 +37,7 @@ namespace UnityServiceLocator
 
 		public static object RegisterSingleton(Type type, Func<object> factory)
 		{
-			if (TryGet(out object service))
+			if (TryGet(type, out object service))
 				return service;
 
 			Assert.IsNotNull(factory);
@@ -48,7 +48,7 @@ namespace UnityServiceLocator
 
 		public static object RegisterSingletonAs(Type objectType, Type interfaceType, Func<object> factory)
 		{
-			if (TryGet(out object service))
+			if (TryGet(objectType, out object service))
 				return service;
 
 			Assert.IsNotNull(factory);
