@@ -14,6 +14,7 @@ namespace UnityServiceLocator
 		static void ClearStatics()
 		{
 			services?.Clear();
+			OnChanged = null;
 		}
 
 		public static bool TryRegister<T>(T service) where T : class
