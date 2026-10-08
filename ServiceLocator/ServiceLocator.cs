@@ -77,7 +77,7 @@ namespace UnityServiceLocator
 			Unregister(typeof(T));
 		}
 
-		public static void Unregister<T>(T service)
+		public static void Unregister<T>(T _)
 		{
 			Unregister(typeof(T));
 		}
